@@ -265,6 +265,9 @@
     const ALL_TAGS = {{ product.tags | json }};
     const BOOK_CODE = ALL_TAGS.find(t => /^[A-Za-z]+\d+$/.test(t)) || '{{ product.handle }}';
 
+    // Customer info from Shopify (empty string if not logged in)
+    const CUSTOMER_EMAIL = '{{ customer.email | default: "" }}';
+
     // SVG star markup for full and half
     function getStarSVG(fill = 1) {
       if (fill === 1) {
@@ -326,6 +329,12 @@
     });
     renderStars(selectedRating);
 
+    // Hide interactive stars if not logged in
+    if (!CUSTOMER_EMAIL) {
+      document.querySelector('.review-request').textContent = 'Log in to share your experience!';
+      document.getElementById('interactive-stars').style.display = 'none';
+    }
+
     // ── Modal logic ───────────────────────────────────────────
     function showModal(rating) {
       modal.style.display = 'flex';
@@ -380,9 +389,10 @@
         return;
       }
 
-      // Prompt for email (Shopify customer email can be injected via Liquid if logged in)
-      const customerEmail = prompt('Enter your email to submit your review:');
-      if (!customerEmail) return;
+      if (!CUSTOMER_EMAIL) {
+        alert('Please log in to submit a review.');
+        return;
+      }
 
       const btn = this;
       btn.disabled = true;
@@ -394,7 +404,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             book_code: BOOK_CODE,
-            customer_email: customerEmail,
+            customer_email: CUSTOMER_EMAIL,
             rating: selectedRating,
             review_text: reviewText || null,
           }),
