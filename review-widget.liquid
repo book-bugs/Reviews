@@ -257,10 +257,13 @@
   <script>
   (function() {
     // ═══════════════════════════════════════════════════════════
-    // CONFIGURATION — update REVIEW_API_BASE after deploying to Render
+    // CONFIGURATION
     // ═══════════════════════════════════════════════════════════
-    const REVIEW_API_BASE = 'https://your-review-service.onrender.com';
-    const BOOK_CODE = '{{ product.metafields.custom.book_code | default: product.handle }}';
+    const REVIEW_API_BASE = 'https://reviews-system.onrender.com';
+
+    // Book code is stored as a product tag (e.g. T210, B7)
+    const ALL_TAGS = {{ product.tags | json }};
+    const BOOK_CODE = ALL_TAGS.find(t => /^[A-Za-z]+\d+$/.test(t)) || '{{ product.handle }}';
 
     // SVG star markup for full and half
     function getStarSVG(fill = 1) {
