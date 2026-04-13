@@ -1,0 +1,82 @@
+{
+  "project": {
+    "name": "book-rental-backend",
+    "repo": "Order-Return-Testing",
+    "owner": "book-bugs",
+    "description": "Node.js/Express backend and Shopify frontend for managing book rentals, returns, and warehouse workflows. Integrates with Shopify Admin API and Supabase.",
+    "language": "JavaScript",
+    "node_version": "18.x",
+    "package_manager": "npm",
+    "entry_point": "server.js",
+    "license": "MIT"
+  },
+  "purpose": "Provide onboarding and repository context for automated assistants (Copilot) so new instances can operate without manual orientation.",
+  "important_files": {
+    "server": "server.js - Express server bootstrap and route mounting",
+    "routes": "src/api/routes.js - API route definitions",
+    "handlers": "src/utils/handlers.js - Main business logic (rentals, returns, webhooks, warehouse)",
+    "shopify": "src/utils/shopify.js - Shopify API integration helpers",
+    "frontend": "frontend/*.js - Shopify theme JS for rental cart, product rental, return interface, and warehouse UI",
+    "docs": "docs/*.md - Project docs, deployment guides, and frontend update logs",
+    "tests": "testing/*.js - Basic test scripts (not a full test suite)"
+  },
+  "onboarding_instructions": {
+    "goal": "Enable Copilot to help maintain and extend the project with minimal manual context transfer.",
+    "top_tasks": [
+      "Run local server and ensure env vars are configured",
+      "Review src/utils/handlers.js for endpoints and critical logic",
+      "Audit frontend files for hardcoded secrets and endpoint URLs",
+      "Run tests in testing/ and expand coverage"
+    ],
+    "how_to_run_locally": [
+      "Copy .env.example to .env and fill required values (SUPABASE, SHOPIFY API tokens, etc.)",
+      "Install dependencies: npm ci",
+      "Start dev server: npm run dev",
+      "For reproducible CI installs use npm ci",
+      "Note: Node.js 18+ is recommended. Use nvm or other version manager in dev environments."
+    ],
+    "env_vars_required": [
+      "SUPABASE_URL",
+      "SUPABASE_KEY",
+      "SHOPIFY_API_KEY",
+      "SHOPIFY_API_SECRET",
+      "SHOPIFY_STORE_DOMAIN",
+      "SHOPIFY_LOCATION_ID",
+      "WEBHOOK_SECRET (if used)",
+      "PORT"
+    ],
+    "safety_and_secrets": "Never store secrets in the repo. Use .env files locally and secret managers in CI. If a secret is found in code, raise it as a high-priority security issue and rotate credentials immediately.",
+    "cross_platform_notes": "Package scripts assume POSIX env-var syntax in one script; prefer cross-env for cross-platform compatibility. Windows PowerShell requires a different syntax for inline environment variables."
+  },
+  "coding_conventions": {
+    "style": "Prefer consistent 2-space indentation. Preserve existing style unless changing a whole file. Keep functions modular and small. Prefer async/await for asynchronous code.",
+    "error_handling": "Handlers should validate input, return clear HTTP status codes, and log useful diagnostic info. External API calls should be wrapped in try/catch and fail gracefully.",
+    "logging": "Use console.debug/info/warn/error consistently. Include contextual identifiers in logs (request ids, order ids). Avoid logging secrets."
+  },
+  "common_tasks_and_commands": {
+    "install": "npm ci",
+    "start": "npm start",
+    "dev": "npm run dev",
+    "test": "npm test",
+    "audit": "npm audit"
+  },
+  "notable_tech_debt": [
+    "Hardcoded frontend API URLs (should be configurable via theme settings or a single config file).",
+    "Frontend contains hardcoded passwords (e.g., warehouse password) — move to backend auth or secure vault.",
+    "Some deprecated package references in lockfile (review and update).",
+    "Tests are script-based; convert to a structured test framework (Jest/Mocha) and add CI integration."
+  ],
+  "how_to_help": {
+    "for_new_copilot_instances": [
+      "When asked to modify code, first open manifest.json to get context and constraints.",
+      "Prefer small, test-backed changes. Run npm ci and the test scripts after edits whenever possible.",
+      "Follow coding_conventions and update docs/readme.md when adding new scripts or env vars."
+    ]
+  },
+  "contacts_and_notes": {
+    "maintainer": "See repo owner: book-bugs (use repo issues or contact owner externally).",
+    "docs_location": "docs/readme.md contains developer-facing instructions and API docs. Keep it updated."
+  },
+  "manifest_version": "1.0",
+  "generated_at": "2025-10-17T00:00:00Z"
+}
