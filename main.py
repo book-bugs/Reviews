@@ -30,6 +30,7 @@ app.add_middleware(
 class ReviewIn(BaseModel):
     book_code: str = Field(..., min_length=1)
     customer_email: EmailStr
+    customer_name: Optional[str] = None
     rating: float = Field(..., ge=1, le=5)
     review_text: Optional[str] = None
 
@@ -38,6 +39,7 @@ class ReviewOut(BaseModel):
     id: str
     book_code: str
     customer_email: str
+    customer_name: Optional[str]
     rating: float
     review_text: Optional[str]
     verified: bool
@@ -57,6 +59,7 @@ def create_review(review: ReviewIn):
     data = {
         "book_code": review.book_code.strip(),
         "customer_email": review.customer_email.strip().lower(),
+        "customer_name": review.customer_name.strip() if review.customer_name else None,
         "rating": review.rating,
         "review_text": review.review_text.strip() if review.review_text else None,
         "verified": False,

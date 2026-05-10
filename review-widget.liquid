@@ -7,7 +7,7 @@
     <div class="reviews-left">
       <div class="rating-row">
         <span class="rating-number" id="avg-rating">—</span>
-        <span class="rating-outof">/5</span>
+        <span class="rating-outof">/ 5</span>
         <span class="rating-text">Overall Rating</span>
       </div>
 
@@ -158,7 +158,8 @@
     }
 
     .rating-outof {
-      font-size: 20px;
+      font-size: 48px;
+      font-weight: bold;
       color: #666;
     }
 
@@ -185,7 +186,7 @@
     .review-request {
       font-size: 16px;
       margin-bottom: 10px;
-      margin-top:12px
+      margin-top: 12px;
       text-align: center;
     }
 
@@ -267,6 +268,14 @@
 
     // Customer info from Shopify (empty string if not logged in)
     const CUSTOMER_EMAIL = '{{ customer.email | default: "" }}';
+    const CUSTOMER_NAME  = '{{ customer.first_name | default: "" }} {{ customer.last_name | default: "" }}'.trim() || null;
+
+    // HTML-escape helper to prevent XSS
+    function esc(str) {
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
 
     // SVG star markup for full and half
     function getStarSVG(fill = 1) {
@@ -405,6 +414,7 @@
           body: JSON.stringify({
             book_code: BOOK_CODE,
             customer_email: CUSTOMER_EMAIL,
+            customer_name: CUSTOMER_NAME,
             rating: selectedRating,
             review_text: reviewText || null,
           }),
@@ -452,8 +462,9 @@
         }
 
         listEl.innerHTML = data.reviews.map(function(r) {
-          const initial = (r.customer_email || '?')[0].toUpperCase();
-          const name = r.customer_email.split('@')[0];
+          const displayName = r.customer_name || r.customer_email.split('@')[0];
+          const initial = esc(displayName[0].toUpperCase());
+          const name = esc(displayName);
           const verifiedBadge = r.verified
             ? '<div class="verified">✔ Verified Reader</div>'
             : '';
@@ -467,7 +478,7 @@
                 </div>
               </div>
               <div class="review-stars">${getStarString(r.rating)}</div>
-              <div class="review-text">${r.review_text ? '"' + r.review_text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '"' : ''}</div>
+              <div class="review-text">${r.review_text ? '"' + esc(r.review_text) + '"' : ''}</div>
             </div>`;
         }).join('');
       } catch (err) {

@@ -1,338 +1,248 @@
-# Book Rental Backend API
+# BookBugs Review System
 
-A robust Node.js/Express backend for managing book rentals with Shopify integration and Supabase database.
+A lightweight review microservice for **BookBugs** — a Shopify-based book rental store.  
+Customers can rate and review books directly on product pages; reviews are stored in Supabase and displayed via a Shopify Liquid widget.
 
-## 🚀 Features
+## 🏗️ Architecture
 
-### Core Functionality
-- **Rental Management**: Create, update, and track book rentals
-- **Shopify Integration**: Product and cart management
-- **Webhook Processing**: Automatic rental record creation from Shopify orders
-- **Customer Management**: Track customer plans and rental limits
-- **Return/Replace System**: Advanced book replacement system
+```
+┌──────────────────────┐      POST /reviews       ┌──────────────────────┐
+│  Shopify Storefront  │ ──────────────────────►   │   FastAPI Backend    │
+│  (review-widget.liquid) │  GET /reviews?book_code= │   (main.py)          │
+│                      │ ◄──────────────────────   │                      │
+└──────────────────────┘                           └──────────┬───────────┘
+                                                              │
+                                                              ▼
+                                                   ┌──────────────────────┐
+                                                   │  Supabase (Postgres) │
+                                                   │  reviews table       │
+                                                   └──────────────────────┘
+```
 
-### Technical Features
-- **Bulletproof Error Handling**: Comprehensive validation and error recovery
-- **Health Monitoring**: Detailed health checks for all services
-- **Graceful Shutdown**: Proper cleanup on server termination
-- **Comprehensive Logging**: Detailed request/response logging
-- **CORS Support**: Configurable cross-origin resource sharing
-- **Rate Limiting**: Built-in request throttling
+| Layer | Technology | File |
+|-------|-----------|------|
+| Backend API | Python 3.11 / FastAPI | `main.py` |
+| Database | Supabase (PostgreSQL) | `supabase_setup.sql` |
+| Frontend Widget | Shopify Liquid + Vanilla JS | `review-widget.liquid` |
 
-## 📋 Prerequisites
+## 📁 Project Structure
 
-- Node.js 18+ 
-- Supabase account and database
-- Shopify store with Admin API access
-- Environment variables configured
+```
+bookbugs review system/
+├── main.py                 # FastAPI application — API endpoints
+├── review-widget.liquid    # Shopify Liquid section — frontend widget
+├── supabase_setup.sql      # Database schema (run once in Supabase SQL Editor)
+├── manifest.json           # Project metadata for AI/assistant onboarding
+├── requirements.txt        # Python dependencies
+├── .env.example            # Environment variable template
+├── .python-version         # Python version (3.11.12)
+└── readme.md               # This file
+```
 
-## 🔧 Environment Variables
+## 🚀 Getting Started
 
-Create a `.env` file with the following variables:
+### Prerequisites
+
+- Python 3.11+
+- A [Supabase](https://supabase.com) project
+- A Shopify store with theme editing access
+
+### 1. Set Up the Database
+
+Open the **Supabase SQL Editor** and run the contents of `supabase_setup.sql`.  
+This creates the `reviews` table with:
+
+- UUID primary key
+- `book_code` + `customer_email` unique constraint (one review per customer per book)
+- Row Level Security with public read/insert policies
+- Index on `book_code` for fast lookups
+
+### 2. Configure Environment Variables
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your actual values:
 
 ```env
-# Supabase Configuration
-SUPABASE_URL=your_supabase_url
-SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_KEY=your_supabase_service_key
-
-# Shopify Configuration
-SHOPIFY_STORE=your-store.myshopify.com
-SHOPIFY_ACCESS_TOKEN=your_admin_access_token
-SHOPIFY_STOREFRONT_TOKEN=your_storefront_token
-SHOPIFY_LOCATION_ID=your_location_id
-
-# Server Configuration
-PORT=3000
-NODE_ENV=production
-ALLOWED_ORIGINS=https://yourdomain.com,https://anotherdomain.com
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_supabase_anon_key
+ALLOWED_ORIGINS=https://your-store.myshopify.com
 ```
 
-## 🛠️ Installation
+| Variable | Description |
+|----------|-------------|
+| `SUPABASE_URL` | Your Supabase project URL |
+| `SUPABASE_KEY` | Supabase anon (public) key |
+| `ALLOWED_ORIGINS` | Comma-separated allowed CORS origins |
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd book-rental-backend
-   ```
+### 3. Install Dependencies
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your actual values
-   ```
-
-4. **Start the server**
-   ```bash
-   npm start
-   ```
-
-## 🧪 Testing
-
-### Run All Tests
 ```bash
-npm test
+pip install -r requirements.txt
 ```
 
-### Run Local Tests
+### 4. Run the Server
+
 ```bash
-npm run test:local
+uvicorn main:app --reload --port 8000
 ```
 
-### Test Coverage
-The test suite covers:
-- ✅ Health checks
-- ✅ API endpoints
-- ✅ Error handling
-- ✅ Data validation
-- ✅ Webhook processing
-- ✅ Database operations
+The API will be available at `http://localhost:8000`.
 
-## 📚 API Endpoints
+### 5. Install the Shopify Widget
 
-### Health & Monitoring
-- `GET /` - Basic health check
-- `GET /health` - Health status
-- `GET /health/detailed` - Comprehensive health check
+1. In your Shopify Admin, go to **Online Store → Themes → Edit Code**
+2. Create a new **Section** and paste the contents of `review-widget.liquid`
+3. Update the `REVIEW_API_BASE` constant in the `<script>` block to point to your deployed API URL
+4. Add the section to your product template
 
-### Core API
-- `GET /api/plan` - Get customer plan and limits
-- `GET /api/books` - List all available books
-- `GET /api/returns` - List active rentals
-- `POST /api/order` - Create new rental order
-- `POST /api/returns` - Process book returns
+## 📚 API Reference
 
-- `POST /api/make-new-rental` - Process rental changes
+### Health Check
 
-### Webhooks
-- `POST /webhook` - Shopify order webhook
-- `POST /webhook-verify` - Webhook verification
-- `POST /test-webhook` - Test webhook endpoint
+```
+GET /
+```
 
-### Testing & Debug
-- `GET /api/test-table-structure` - Test database structure
-- `POST /api/test-rental` - Test rental creation
-- `POST /test-webhook` - Test webhook processing
-
-## 🔄 Make New Rental Flow
-
-The `make-new-rental` endpoint handles complex rental replacement logic:
-
-1. **Validation**: Comprehensive input validation
-2. **Checkout Creation**: Creates Shopify cart for new books
-3. **Database Cleanup**: Deletes old rental records
-4. **Record Creation**: Creates new records for kept books
-5. **Response**: Returns checkout URL or success confirmation
-
-### Request Format
+**Response:**
 ```json
 {
-  "customer_id": "customer_123",
-  "newBooks": [
+  "status": "ok",
+  "service": "bookbugs-reviews"
+}
+```
+
+---
+
+### Submit a Review
+
+```
+POST /reviews
+Content-Type: application/json
+```
+
+**Request Body:**
+```json
+{
+  "book_code": "T210",
+  "customer_email": "reader@example.com",
+  "rating": 4.5,
+  "review_text": "Great book, loved every chapter!"
+}
+```
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `book_code` | string | ✅ | Product identifier (from Shopify product tags) |
+| `customer_email` | string (email) | ✅ | Must be a valid email |
+| `rating` | float | ✅ | Between 1.0 and 5.0 (supports half-stars) |
+| `review_text` | string | ❌ | Optional written review |
+
+**Success (201):**
+```json
+{
+  "success": true,
+  "review": {
+    "id": "uuid",
+    "book_code": "T210",
+    "customer_email": "reader@example.com",
+    "rating": 4.5,
+    "review_text": "Great book, loved every chapter!",
+    "verified": false,
+    "created_at": "2026-05-10T00:00:00+00:00"
+  }
+}
+```
+
+**Duplicate (409):**
+```json
+{
+  "detail": "You have already reviewed this book."
+}
+```
+
+---
+
+### Get Reviews for a Book
+
+```
+GET /reviews?book_code=T210
+```
+
+**Response:**
+```json
+{
+  "book_code": "T210",
+  "total_reviews": 12,
+  "average_rating": 4.3,
+  "reviews": [
     {
-      "variantId": "123",
-      "title": "New Book",
-      "imageUrl": "https://..."
-    }
-  ],
-  "removedBooks": [
-    {
-      "variantId": "456",
-      "title": "Removed Book",
-      "imageUrl": "https://..."
-    }
-  ],
-  "currentRentalBooks": [
-    {
-      "variantId": "789",
-      "title": "Kept Book",
-      "imageUrl": "https://..."
+      "id": "uuid",
+      "book_code": "T210",
+      "customer_email": "reader@example.com",
+      "rating": 4.5,
+      "review_text": "Great book!",
+      "verified": false,
+      "created_at": "2026-05-10T00:00:00+00:00"
     }
   ]
 }
 ```
 
-### Response Format
-```json
-{
-  "success": true,
-  "message": "Rental changes processed successfully",
-  "checkoutUrl": "https://checkout.shopify.com/...",
-  "changes": {
-    "newBooks": 1,
-    "removedBooks": 1,
-    "keptBooks": 1
-  }
-}
+Reviews are sorted **newest first**.
+
+## 🧩 Frontend Widget Details
+
+The `review-widget.liquid` file is a self-contained Shopify section with HTML, CSS, and JavaScript:
+
+- **Book identification:** Extracts `book_code` from Shopify product tags using the regex `/^[A-Za-z]+\d+$/` (e.g., `T210`, `B7`). Falls back to `product.handle`.
+- **Auth check:** If the customer is not logged in (`{{ customer.email }}` is empty), the star input is hidden and replaced with a "Log in" message.
+- **Half-star support:** Both the interactive input and display use SVG-based stars with half-star granularity.
+- **Modal:** Clicking a star opens a review submission modal with adjustable stars and a textarea.
+- **XSS protection:** Review text and usernames are sanitized before rendering.
+
+## 🗄️ Database Schema
+
+```sql
+CREATE TABLE reviews (
+    id              UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    book_code       TEXT NOT NULL,
+    customer_email  TEXT NOT NULL,
+    rating          NUMERIC(2,1) NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    review_text     TEXT,
+    verified        BOOLEAN DEFAULT false,
+    created_at      TIMESTAMPTZ DEFAULT now(),
+    UNIQUE (book_code, customer_email)
+);
 ```
 
-## 🛡️ Error Handling
+**Row Level Security** is enabled with public read and insert policies.
 
-### Input Validation
-- Required field validation
-- Data type checking
-- Array validation
-- Business logic validation
+## 🚢 Deployment
 
-### Checkout Resilience
-- The `/order` endpoint accepts a list of variant IDs (or an `items` array for backwards compatibility).  it simply hands whatever is received to Shopify's cart API without pre‑filtering.  the goal is to **always create a checkout**; if Shopify fails to build a cart the API returns `success:false` and the frontend keeps the cart intact so the customer can retry.
-- `/product-status` still exists for informational purposes, but it no longer blocks adds or disables buttons. transients are ignored, and the server will not drop books before attempting checkout.
-- The backend no longer attempts to resolve product IDs or perform multiple retries; complexity has been removed in favor of a straight‑through flow.  Shopify is responsible for validating the line items.
-- Responses include `removedIds` if Shopify silently discarded any lines, but this is advisory only.
+The API is currently deployed on **Render** at:
 
-### Error Recovery
-- Graceful degradation
-- Partial operation completion
-- Detailed error logging
-- User-friendly error messages
-
-### Error Response Format
-```json
-{
-  "error": "Error description",
-  "message": "Detailed error message",
-  "timestamp": "2024-01-01T00:00:00.000Z"
-}
+```
+https://reviews-system.onrender.com
 ```
 
-## 📊 Monitoring
+### Deploy Your Own Instance
 
-### Health Checks
-- Server status monitoring
-- Database connectivity
-- Shopify API connectivity
-- Service dependencies
+1. Push this repo to GitHub
+2. Create a new **Web Service** on [Render](https://render.com)
+3. Set the **Build Command** to `pip install -r requirements.txt`
+4. Set the **Start Command** to `uvicorn main:app --host 0.0.0.0 --port $PORT`
+5. Add your environment variables (`SUPABASE_URL`, `SUPABASE_KEY`)
+6. Deploy
 
-### Logging
-- Request/response logging
-- Error tracking
-- Performance monitoring
-- Debug information
+## ⚠️ Known Limitations
 
-## 🚀 Deployment
-
-### Render Deployment
-1. Connect your GitHub repository
-2. Set environment variables
-3. Deploy automatically
-
-### Environment Variables for Production
-```env
-NODE_ENV=production
-PORT=10000
-ALLOWED_ORIGINS=https://yourdomain.com
-```
-
-### Health Check URLs
-- Basic: `https://your-app.onrender.com/`
-- Detailed: `https://your-app.onrender.com/health/detailed`
-
-## 🔧 Development
-
-### Development Mode
-```bash
-npm run dev
-```
-
-### Code Structure
-```
-src/
-├── api/
-│   └── routes.js          # API route definitions
-├── utils/
-│   ├── handlers.js        # Business logic handlers
-│   └── shopify.js         # Shopify API integration
-├── server.js              # Express server setup
-└── test-backend.js        # Comprehensive test suite
-```
-
-### Adding New Endpoints
-1. Add handler function in `src/utils/handlers.js`
-2. Add route in `src/api/routes.js`
-3. Add test in `test-backend.js`
-4. Update documentation
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Server won't start**
-- Check environment variables
-- Verify port availability
-- Check for missing dependencies
-
-**Database connection errors**
-- Verify Supabase credentials
-- Check network connectivity
-- Validate database schema
-
-**Shopify API errors**
-- Verify API tokens
-- Check store permissions
-- Validate location ID
-
-**Webhook issues**
-- Check webhook URL configuration
-- Verify webhook signature
-- Test with webhook verification endpoint
-
-### Debug Mode
-Enable detailed logging:
-```bash
-DEBUG=* npm start
-```
-
-## 📈 Performance
-
-### Optimization Features
-- Connection pooling
-- Request caching
-- Error rate limiting
-- Graceful degradation
-
-### Monitoring
-- Response time tracking
-- Error rate monitoring
-- Resource usage tracking
-- Health check alerts
-
-## 🔒 Security
-
-### Security Features
-- Input sanitization
-- CORS protection
-- Rate limiting
-- Error message sanitization
-- Environment variable protection
-
-### Best Practices
-- Use HTTPS in production
-- Validate all inputs
-- Sanitize error messages
-- Monitor for suspicious activity
-- Regular security updates
+- **No server-side auth:** The API accepts any email — authentication relies on the Shopify frontend passing `{{ customer.email }}`. Anyone with the API URL can submit reviews.
+- **`verified` is always `false`:** There is no logic yet to cross-reference reviews with actual rental records.
+- **Public RLS policies:** Both read and insert are open. Tighten insert policies once authentication is added.
 
 ## 📝 License
 
 This project is licensed under the MIT License.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📞 Support
-
-For support and questions:
-- Create an issue in the repository
-- Check the troubleshooting section
-- Review the API documentation
-- Run the test suite for debugging

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     book_code   TEXT NOT NULL,
     customer_email TEXT NOT NULL,
+    customer_name  TEXT,
     rating      NUMERIC(2,1) NOT NULL CHECK (rating >= 1 AND rating <= 5),
     review_text TEXT,
     verified    BOOLEAN DEFAULT false,
